@@ -142,7 +142,7 @@ var grid = function(options) {
         }
         return row_column;
     };
-    this.render = function() {
+    this.render = function(lines,columns) {
         var table = document.createElement("div");
         table.setAttribute("class","container-fluid");
         var headerfrag = document.createDocumentFragment();
@@ -178,43 +178,6 @@ var grid = function(options) {
     };
 };
 
-/** Here is our string test **/
 
-var echo = function(str) {
-    return str;
-};
-
-
-var line_one = new row({"id":1,"location":1});
-var line_two = new row({"id":2,"location":2});
-var lines = new rowList();
-lines.addRow(line_one);
-lines.addRow(line_two);
-var line_one_copy = lines.getRow(1);
-line_one_copy.getLocation();
-
-var col_one = new column({"id":1,"content":"<p>I am col one</p>"});
-var col_two = new column({"id":2,"content":"<p>I am col two</p>"});
-var columns = new columnList();
-columns.addColumn(col_one);
-columns.addColumn(col_two);
-var col_one_copy = columns.getColumn(1);
-col_one_copy.getContent();
-
-var row_one_col_one = new row_column({"id":1,"row_id":1,"column_id":1,"location":1});
-var row_one_col_two = new row_column({"id":2,"row_id":1,"column_id":2,"location":2});
-
-var row_two_col_one = new row_column({"id":3,"row_id":2,"column_id":1,"location":1});
-var row_two_col_two = new row_column({"id":4,"row_id":2,"column_id":2,"location":2});
-
-var g = new grid();
-g.addRowColumn(row_one_col_one);
-g.addRowColumn(row_one_col_two);
-g.addRowColumn(row_two_col_one);
-g.addRowColumn(row_two_col_two);
-
-
-
-/** end of sting test **/
 
 
