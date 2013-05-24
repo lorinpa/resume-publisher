@@ -7,64 +7,6 @@
         <link type="text/css" href="css/bootstrap/css/bootstrap.css" media="all" rel="stylesheet" id="bootstrap"/>
     <style>
 
-        body {
-            font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-            font-size: 14px;
-            line-height: 20px;
-            color: rgb(51, 51, 51);
-            padding-bottom:25px;
-            padding-top:40px;
-        }
-        .navbar {
-            z-index:1;
-        }
-        ul.nav li.dropdown {
-            list-style:none;
-            display: inline-table;
-            padding:2px;
-        }
-        ul.dropdown-menu {
-            display:none;
-            position:relative;
-            list-style:none;
-            margin-left:20px;
-        }
-        .dropdown-menu a {
-            z-index:100;
-            text-decoration:none;
-            color:black;
-        }
-        .dropdown-menu a:hover {
-            font-weight:bold;
-            text-decoration:underline;
-        }
-        .nav ul:after {
-            content: '';
-            display: block;
-            clear: both;
-        }
-        .nav  {
-            position:absolute;
-        }
-        li.dropdown:hover > ul.dropdown-menu {
-            display:block;
-            position:absolute;
-            box-shadow:10px 10px 5px #888;
-            width:120px;
-            padding:8px;
-            background:white;
-            color:black;
-            *z-index: 1000;
-            zoom:1;
-        }
-        li.dropdown > ul.dropdown-menu :after {
-            content: '';
-            display: block;
-            clear: both;
-        }
-        .dropdown-toggle {
-            font-size:14px;
-        }
         #footer {
             position:fixed;
             left:0px;
@@ -76,42 +18,44 @@
         #div.report {
             margin-bottom:40px;
         }
+        #edit-column-dlg {
+            display:none;
+            position:fixed;top:25%;
+            resize:both;
+            background:white;
+            box-shadow:10px 10px 5px #888;
+        }
+        .control-dlg {
+            border: solid 1px black;
+            padding:6px;
+        }
+        .cell-border {
+            border: solid 1px silver;
+        }
     </style>
-  <style type="text/css" id="resume-style">
-            #report {
-                margin-top:60px;
-                margin-bottom:30px;
-                margin-left:2px;
-            }
-            .control-dlg {
-                border: solid 1px black;
-                padding:6px;
-            }
-            .cell-border {
-                border: solid 1px silver;
-            }
-
-    </style>
+    <style type="text/css" id="resume-style">
+        #report {
+            margin-top:60px;
+            margin-bottom:30px;
+            margin-left:2px;
+        }
+        .chronology {
+            text-align:left;
+            font-style: italic;
+        }
+     </style>
 
     <link rel="shortcut icon" href="favicon.png">
+    <script type="text/javascript" src="js/lib/jquery/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="js/lib/bootstrap/js/bootstrap.js"></script>
     <script type="text/javascript" src="js/local/resume.js"></script>
     <script type="text/javascript" src="js/local/dom_doc.js"></script>
-
     </head>
     <body>
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container-fluid">
-                    <div id="dlg-controls">
-                        <div id="add-column-dlg" style="display:none;" class="control-dlg pull-right well">
-                            <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
-                            <div>Add Column to Row</div>
-                            <select id="add-column-to-row" style="width:45px;margin-top:8px;">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                            </select>
-                            <button id="add-column-to-row-button">Add</button>
-                        </div>
+
 
                         <ul class="nav">
                             <li class="dropdown ">
@@ -124,43 +68,56 @@
                                 <a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href="#">Row <b class="caret"></b></a>
                                 <ul id="menu2" class="dropdown-menu" role="menu" aria-labelledby="drop5">
                                     <li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="add-row-link">Add Row</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="delete-row-link">Delete Row</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown ">
-                                <a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href="#">Column <b class="caret"></b></a>
-                                <ul id="menu3" class="dropdown-menu" role="menu" aria-labelledby="drop5">
+                                <a class="dropdown-toggle" id="drop6" role="button" data-toggle="dropdown" href="#">Column <b class="caret"></b></a>
+                                <ul id="menu3" class="dropdown-menu" role="menu" aria-labelledby="drop6">
                                     <li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="add-column-link">Add Column</a></li>
                                 </ul>
                             </li>
-
                         </ul>
-
                     </div>
                 </div>
             </div>
-        </div>
 
+            <div id="dlg-controls">
+                <div id="add-column-dlg" style="display:none;width:150px;'" class="control-dlg pull-right well">
+                    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
+                    <div draggable="true">Add Column to Row</div>
+                    <select id="add-column-to-row" style="width:45px;margin-top:8px;"></select>
+                    <button id="add-column-to-row-button">Add</button>
+                </div>
+                <div id="row-delete-dlg" style="display:none;" class="control-dlg pull-right well">
+                    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
+                    <div>Delete Row</div>
+                    <select id="delete-row" style="width:45px;margin-top:8px;">
+                    </select>
+                    <button id="delete-row-button">Delete</button>
+                </div>
+            </div>
 
+            <div id="edit-column-dlg" style="display:none;" class="control-dlg">
+                <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
+                <div>edit column&nbsp;<span id="cell-row"></span>,<span id="cell-col"></span></div>
+                <div id="edit-column-container"></div>
+            </div>
 
-        <div id ="report" class="container-fluid">
+            <div id ="report" class="container-fluid"></div>
 
-        </div>
-
-        <footer id="footer">
-            <div id="success-msg" class="alert alert-success control-dlg" style="display:none;"></div>
-
-            <div id="error-msg" class="alert alert-error control-dlg" style="display:none;"></div>
-            <div id="info-msg" class="alert alert-info control-dlg" style="display:none;"></div>
-        </footer>
-        <script>
-
-            document.onreadystatechange = function () {
-                if (document.readyState == "complete") {
-                    g = new grid({"rowList":new rowList(),"columnList": new columnList()});
-                    new AppRouter();
+            <footer id="footer">
+                <div id="success-msg" class="alert alert-success control-dlg" style="display:none;"></div>
+                <div id="error-msg" class="alert alert-error control-dlg" style="display:none;"></div>
+                <div id="info-msg" class="alert alert-info control-dlg" style="display:none;"></div>
+            </footer>
+            <script>
+                document.onreadystatechange = function () {
+                    if (document.readyState == "complete") {
+                        g = new grid({"rowList":new rowList(),"columnList": new columnList()});
+                        new AppRouter();
+                    }
                 }
-            }
-        </script>
-
+            </script>
     </body>
 </html>

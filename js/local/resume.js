@@ -38,6 +38,22 @@ var rowList = function() {
     this.addRow = function(row) {
         this.list.push(row);
     };
+    /** Delete row entity from the collection */
+    this.deleteRow = function(row_id) {
+        var len = this.list.length;
+        var index = null;
+        var elem = null;
+        for (var nIndex=0; nIndex < len; nIndex++) {
+            elem = this.list[nIndex];
+            if (elem.getId()== row_id) {
+                index = nIndex;
+                break;
+            }
+        }
+        if (index !== null) {
+            this.list.splice(index,1);
+        }
+    };
     /** Get row entity by id (key) */
     this.getRow= function(row_id) {
         var len = this.list.length;
@@ -130,6 +146,24 @@ var columnList = function() {
     /** Add column entity to the collection */
     this.addColumn= function(col) {
         this.list.push(col);
+    };
+
+    /** Delete column entity from the collection */
+    this.deleteColumn = function(column) {
+        var id = column.getId();
+        var len = this.list.length;
+        var index = null;
+        var elem = null;
+        for (var nIndex=0; nIndex < len; nIndex++) {
+            elem = this.list[nIndex];
+            if (elem.getId()== id) {
+                index = nIndex;
+                break;
+            }
+        }
+        if (index !== null) {
+            this.list.splice(index,1);
+        }
     };
 
     /** Get column entity by id value (key). */
@@ -284,6 +318,101 @@ var grid = function(options) {
         this.list.push(row_column);
     };
 
+      /** Delete row_column cell entity from the list collection */
+    this.deleteRowColumn = function(row_column) {
+        var id = row_column.getId();
+        var len = this.list.length;
+        var index = null;
+        var elem = null;
+        for (var nIndex=0; nIndex < len; nIndex++) {
+            elem = this.list[nIndex];
+            if (elem.getId()== id) {
+                index = nIndex;
+                break;
+            }
+        }
+        if (index !== null) {
+            this.list.splice(index,1);
+        }
+    };
+    /** Counts the number of times a column entity id is referred to in this row_column list collection */
+    this.getNumColumnReferences=function(column) {
+        var len = this.list.length;
+        var elem = null;
+        var count = 0;
+        var id = column.getId();
+        for (var nIndex=0; nIndex < len; nIndex++) {
+            elem = this.list[nIndex];
+            if (elem.getColumnId() == id) {
+                count++;
+            }
+        }
+        return count;
+    };
+
+    /** Check to see if we this row is empty **/
+    this.getNumColumnsInRow=function(row_id) {
+        var len = this.list.length;
+        var elem = null;
+        var count = 0;
+        for (var nIndex=0; nIndex < len; nIndex++) {
+            elem = this.list[nIndex];
+            if (elem.getRowId() == row_id) {
+                count++;
+            }
+        }
+        return count;
+    };
+
+    /** Delete a row entity from this row_list instance.
+    *   Moves the location values of all rows below the deleted row.
+    * */
+    this.deleteRow=function(row_id) {
+        var row_position = null;
+        var row_column = null;
+        var row  = null;
+        var column = null;
+        var row_column_delete_list = [];
+        var column_delete_list = [];
+        var len = this.list.length;
+        for (var nIndex= 0; nIndex < len; nIndex++) {
+            row_column = this.list[nIndex];
+            if (row_column && (row_column.getRowId() == row_id)) {
+                row_column_delete_list.push(row_column);
+                column_delete_list.push(this.columnList.getColumn(row_column.getColumnId()));
+            }
+        }
+        len = row_column_delete_list.length;
+        for (var nIndex=0; nIndex < len; nIndex++) {
+            row_column = row_column_delete_list[nIndex];
+            this.deleteRowColumn(row_column);
+        }
+        len = column_delete_list.length;
+        for (var nIndex=0; nIndex < len; nIndex++) {
+            column = column_delete_list[nIndex];
+            if (this.getNumColumnReferences(column) === 0){
+                this.columnList.deleteColumn(column);
+            }
+        }
+        row = this.rowList.getRow(row_id);
+        row_position = row.getLocation();
+        this.rowList.deleteRow(row_id);
+        // finally renumber the location values
+        len = this.list.length;
+        var location = null;
+        for (var nIndex=0; nIndex < len; nIndex++){
+            row_column = this.list[nIndex];
+            row = this.rowList.getRow(row_column.getRowId());
+            if (row.getLocation() > row_position) {
+                location = row.getLocation();
+                if (location > 0) {
+                    location = location -1;
+                    row.setLocation(location);
+                }
+            }
+        }
+    };
+
     /** Get a row_column cell entity */
     this.getRowColumn = function(row_id, column_id){
         var row_column = null;
@@ -299,7 +428,7 @@ var grid = function(options) {
     /** Get this instance of rowList **/
     this.getRowList = function() {
         return this.rowList;
-    }
+    };
     /** Get this instance of columnList. */
     this.getColumnList = function() {
         return this.columnList;
@@ -441,4 +570,3 @@ var grid = function(options) {
     };
     this.init(options);
 };
-
