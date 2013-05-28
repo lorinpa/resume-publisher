@@ -83,6 +83,19 @@ var rowList = function() {
         return last;
     };
 
+    /** Replace the current collection with a new sart of row entities.***/
+    this.importList= function(import_list) {
+	var json_list = JSON.parse(import_list);
+	if (json_list && (json_list instanceof Array || json_list instanceof Object)) {
+		var len = json_list.length;
+		this.list.length=0;
+		var dataRow = null;
+		for (var nIndex = 0; nIndex < len; nIndex ++) {
+			dataRow = json_list[nIndex];
+			this.addRow(new row(dataRow));
+		}   
+	}
+    };
     /** Creates the option list for the add-column-to-row select control
     *   Sets the option value to row.id and option text to row.location.
     *   Note. We sort the list by location value
@@ -177,6 +190,20 @@ var columnList = function() {
            }
         }
         return col;
+    };
+
+    /** Replace collection with new list of column entities. */
+    this.importList= function(import_list) {
+        var json_list = JSON.parse(import_list);
+        if (json_list && (json_list instanceof Array || json_list instanceof Object)) {
+            var len = json_list.length;
+            this.list.length = 0;
+            var dataRow = null;
+            for (var nIndex = 0; nIndex < len; nIndex ++) {
+                dataRow = json_list[nIndex];
+                this.addColumn(new column(dataRow));
+            }
+        }
     };
 };
 /** Cell entity.
@@ -453,6 +480,17 @@ var grid = function(options) {
         }
         return last;
     };
+
+    /** Replace this row_column collection list */
+    this.importList=function(row_column_list) {
+        var self = this;
+        this.list.length = 0;
+        function importRowColumn(element, index, array) {
+            self.addRowColumn(new row_column(element));
+        }
+        row_column_list.forEach(importRowColumn);
+    };
+
     /** Adds a new row. Internally we add a new row entity, column entity and a row_column cell */
     this.addBlankRow = function() {
         // allows the user to add a logical row -- internally a new
@@ -567,6 +605,107 @@ var grid = function(options) {
         docfrag.appendChild(tr);
         table.appendChild(docfrag);
         return table;
+    };
+
+    /** Saves the 3 collection list to the browser's localStorage database. The 3 collection lists
+     *  are rows, columns and row_columns (cells).
+     *
+     *  Note! Logically we use the browser's localStorage database to persist the user's work. However,
+     *  the localStorage database is limited in size and not transportable. Thus, we also provide and
+     *  recommend the user save their work to an external text file (Save Data Export function).
+     */
+    this.store = function() {
+        try {
+            localStorage.setItem("rows",JSON.stringify(this.rowList.list));
+            localStorage.setItem("columns",JSON.stringify(this.columnList.list));
+            localStorage.setItem("row_columns",JSON.stringify(this.list));
+        } catch(error) {
+            console.log("store() error : " + error);
+        }
+    };
+    /** Replaces the 3 collection lists (rows, columns and row_columns) with data stored
+     *  in the browser's localStorage database.
+     *
+     *  Note! We currently do not provide a validation where the localStorage database is empty.
+     *
+     *  @param el The element used to store the rendered product of this grid (user's resume document).
+     */
+    this.load = function(target_el) {
+        try {
+            this.rowList.length =0;
+            this.columnList.length=0;
+            this.list.length =0;
+
+            this.rowList.importList(localStorage.getItem("rows"));
+            this.columnList.importList(localStorage.getItem("columns"));
+            this.importLocalList(localStorage.getItem("row_columns"));
+            if (target_el) {
+                target_el.appendChild(this.render());
+            }
+
+        } catch(error) {
+            console.log("load() error "+ error );
+        }
+    };
+    /** Converts a JSON array to a collection of row_columns (cells).
+     *  This method then replaces the current row_column collection list with
+     *  the data contained in the JSON array (import_list paramater).
+     *
+     *  @param JSON array of row_list (cell) entities.
+     */
+    this.importLocalList= function(import_list) {
+        var json_list = JSON.parse(import_list);
+        if (json_list && (json_list instanceof Array || json_list instanceof Object)) {
+            var len = json_list.length;
+            var dataRow = null;
+            for (var nIndex = 0; nIndex < len; nIndex ++) {
+                dataRow = json_list[nIndex];
+                this.addRowColumn(new row_column(dataRow));
+            }
+        }
+    };
+    /** Makes a copy of the grid's 3 collection lists (rows, columns and row_columns/cells).
+     *  This method creates a JSON object which contains 3 JSON arrays (rows, columns and row_columns).
+     *
+     *  Note! This method is used by the "Save Data Export" function. Prepares the users document in JSON
+     *  format, so the user can store the data in an external flat (text) file.
+     *  @returns Users document in JSON format.
+     */
+    this.toJson = function() {
+        var data = {
+            "rows":JSON.stringify(this.rowList.list),
+            "columns":JSON.stringify(this.columnList.list),
+            "row_columns":JSON.stringify(this.list)
+        };
+        return data;
+    };
+    /** Creates a document in memory (AKA blob). The document contains
+     *  the user's document in JSON format.
+     *
+     *  This method also creates a link to the document. The link is set
+     *  to the appropriate json mime type  The result is, the user clicks on the link and
+     *  the browser displays a file dial:og. Allowing the user to save a transportable backup
+     *  of the document data.
+     *
+     *  @returns Link element for user to download document data in JSON format.
+     *
+     */
+    this.toBlob= function() {
+        if (! window.URL) {
+            // handle opera and safari
+            showErrorMessage("Sorry this function is not supported by your web browser.");
+            return;
+        }
+        var mime_type = "application/json";
+        var data = JSON.stringify(this.toJson());
+        var bb = new Blob([data], {type: mime_type});
+        var a = document.createElement('a');
+        a.download = container.querySelector('input[type="text"]').value;
+        a.download = 'resume.json';
+        a.href = window.URL.createObjectURL(bb);
+        a.textContent = 'Download ready';
+        a.dataset.downloadurl = [mime_type, a.download, a.href].join(':');
+        return a;
     };
     this.init(options);
 };

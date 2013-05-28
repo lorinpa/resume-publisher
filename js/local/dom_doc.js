@@ -184,7 +184,41 @@ var hideInfoMessage = function() {
 */
 var AppRouter  =  function() {
 
-        /** Responds to click on menu item : Rows->Add Row */
+	/** Responds to click on menu item : Document->Load (from localStorage). */
+	document.querySelector("#load-doc-link").addEventListener("click", function(event) {
+		event.preventDefault();
+		var table = document.querySelector("#report");
+		g.load(table);
+		showSuccessMessage("Document Loaded from Web Browser local database.");
+	});
+	/** Responds to click on menu item : Document->Store/Save  (to localStorage). */
+	document.querySelector("#store-doc-link").addEventListener("click", function(event) {
+		event.preventDefault();
+		closeDialogControls();
+		g.store();
+		showSuccessMessage("Document Saved to Web Browser local database..");
+	});
+
+	/** Responds to click on menu item : Document->Save Data Export */
+	document.querySelector("#save-json-link").addEventListener("click", function(event) {
+		event.preventDefault();
+		closeDialogControls();
+		var link = g.toBlob();
+		var dlg = document.querySelector("#export-json-dlg");
+		dlg.style.setProperty("display", "block");
+		var link_container = dlg.querySelector("#save-json");
+		link_container.innerHTML = link.outerHTML;
+	});
+
+	/** Responds to click on menu item : Document->Import File Data */
+	document.querySelector("#import-json-link").addEventListener("click", function(event) {
+		event.preventDefault();
+		closeDialogControls();
+		var dlg = document.querySelector("#import-json-dlg");
+		dlg.style.setProperty("display", "block");
+	});
+        
+	/** Responds to click on menu item : Rows->Add Row */
         document.querySelector("#add-row-link").addEventListener("click", function(event) {
             event.preventDefault();
             closeDialogControls();
@@ -253,7 +287,7 @@ var AppRouter  =  function() {
                 var tagName = event.target.tagName;
                 switch (tagName) {
                     case 'I':
-                        closeDialogControls();event
+                        closeDialogControls();
                     break;
                 }
             };
@@ -377,11 +411,65 @@ var AppRouter  =  function() {
                 }
             };
 
+            /** Services the Import File Data Dialog.
+             *  The user clicks on a file browse button (and dialog).
+             *  This routine then reads the selected file. Checks that the file reader is complete.
+             *  Reads the file's content as text.
+             *  The file chosen must of been created by our Data Export routine. That means the file contrains
+             *  a json object who contains 3 json arrays: rows, columns and row_columns
+             *  This routine processes each array and at the end re-paints the document.
+             *
+             *  Note! We might want to move some of this logic in to the "grid" object.
+             *  In general, the event listeners are located here. Once the file content is read in to memory. The remaining
+             *  logic might be better housed in the grid.
+            */
+            this.importFileListener = function(event) {
+                event.preventDefault();
+                var file = event.target.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.readAsText(file);
+                    reader.onload = function(file_event) {
+                        if (this.readyState === this.DONE) {
+                            var result = file_event.target.result;
+                            var data = JSON.parse(result);
+                            if (data && data instanceof Object) {
+                                for (var segment in data) {
+                                    //console.log(segment);
+                                    switch (segment) {
+                                        case 'rows':
+                                            var rowList = g.getRowList();
+                                            rowList.importList(data['rows']);
+                                        break;
+                                        case 'columns':
+                                            var columnList = g.getColumnList();
+                                            columnList.importList(data['columns']);
+                                        break;
+                                        case 'row_columns':
+                                            var temp = data['row_columns'];
+                                            var temp_list = JSON.parse(temp);
+                                            g.importList(temp_list);
+                                            var doc_div = document.querySelector("#report");
+                                            var table = g.render();
+                                            doc_div.innerHTML = table.outerHTML;
+                                            // let's close the dialog and display a status
+                                            closeDialogControls();
+                                            showSuccessMessage("File Data Imported.")
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    };
+                }
+            };
+
             /** Selects the appropriate dom elements and adds event listeners to them.
              *
              */
             this.init = function() {
-                document.querySelector("#report").addEventListener("click", this.clickListener, true);
+		document.querySelector("input#import-json").addEventListener("change", this.importFileListener, false);
+		document.querySelector("#report").addEventListener("click", this.clickListener, true);
                 document.querySelector("#edit-column-dlg").addEventListener("click", this.editCellListener, true);
                 document.querySelector("#add-column-to-row-button").addEventListener("click", this.addColumnListener, true);
                 document.querySelector("#dlg-controls").addEventListener("click", this.dlgListener, true);

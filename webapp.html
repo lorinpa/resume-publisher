@@ -56,12 +56,14 @@
             <div class="navbar-inner">
                 <div class="container-fluid">
 
-
                         <ul class="nav">
                             <li class="dropdown ">
                                 <a class="dropdown-toggle" id="drop4" role="button" data-toggle="dropdown" href="#">Document <b class="caret"></b></a>
                                 <ul id="menu1" class="dropdown-menu" role="menu" aria-labelledby="drop4">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="">Not implemented.</a></li>
+					<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="import-json-link"><b>Import</b> File Data</a></li>
+					<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="save-json-link"><b>Export</b> File Data</a></li>
+					<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="store-doc-link"><b>Save</b> to local database</a></li>
+					<li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="load-doc-link"><b>Load</b> from local database</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown  ">
@@ -80,23 +82,46 @@
                         </ul>
                     </div>
                 </div>
-            </div>
+	</div>
 
-            <div id="dlg-controls">
-                <div id="add-column-dlg" style="display:none;width:150px;'" class="control-dlg pull-right well">
-                    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
-                    <div draggable="true">Add Column to Row</div>
-                    <select id="add-column-to-row" style="width:45px;margin-top:8px;"></select>
-                    <button id="add-column-to-row-button">Add</button>
-                </div>
-                <div id="row-delete-dlg" style="display:none;" class="control-dlg pull-right well">
-                    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
-                    <div>Delete Row</div>
-                    <select id="delete-row" style="width:45px;margin-top:8px;">
-                    </select>
-                    <button id="delete-row-button">Delete</button>
-                </div>
-            </div>
+
+		<div id="dlg-controls">
+			<div id="add-column-dlg" style="display:none;width:150px;'" class="control-dlg pull-right well">
+			    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
+			    <div draggable="true">Add Column to Row</div>
+			    <select id="add-column-to-row" style="width:45px;margin-top:8px;"></select>
+			    <button id="add-column-to-row-button">Add</button>
+			</div>
+			<div id="row-delete-dlg" style="display:none;" class="control-dlg pull-right well">
+			    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
+			    <div>Delete Row</div>
+			    <select id="delete-row" style="width:45px;margin-top:8px;">
+			    </select>
+			    <button id="delete-row-button">Delete</button>
+			</div>
+
+
+			<div id="export-json-dlg" style="display:none;" class="control-dlg pull-right well">
+			    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
+			    <div id="save-json"></div>
+			</div>
+
+			<div id="import-json-dlg" style="display:none;" class="control-dlg pull-right well">
+			    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
+			    <input type="file" name="json-file"  id="import-json"/>
+			</div>
+
+			<div id="export-doc-dlg" style="display:none;" class="control-dlg">
+			    <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
+			    <div>Export</div>
+			    <div id="container">
+				<input type="text" value="MyFile.html" placeholder="filename.txt">
+				<button onclick="downloadFile()">Create file</button>
+				<output></output>
+			    </div>
+			</div>
+		</div>
+
 
             <div id="edit-column-dlg" style="display:none;" class="control-dlg">
                 <div style="float:right;"><i class="icon-remove-sign close-dlg-icon"></i></div>
@@ -114,8 +139,13 @@
             <script>
                 document.onreadystatechange = function () {
                     if (document.readyState == "complete") {
-                        g = new grid({"rowList":new rowList(),"columnList": new columnList()});
-                        new AppRouter();
+			    g = new grid({"rowList":new rowList(),"columnList": new columnList()});
+			    var report_el = document.getElementById("report");
+			    report_el.innerHTML = "";
+			    if (localStorage.getItem("rows") ) {
+				    g.load(report_el);
+			    }
+			    new AppRouter();
                     }
                 }
             </script>
