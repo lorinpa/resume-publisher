@@ -83,18 +83,18 @@ var rowList = function() {
         return last;
     };
 
-    /** Replace the current collection with a new sart of row entities.***/
+    /** Replace the current collection with a new set of row entities.***/
     this.importList= function(import_list) {
-	var json_list = JSON.parse(import_list);
-	if (json_list && (json_list instanceof Array || json_list instanceof Object)) {
-		var len = json_list.length;
-		this.list.length=0;
-		var dataRow = null;
-		for (var nIndex = 0; nIndex < len; nIndex ++) {
-			dataRow = json_list[nIndex];
-			this.addRow(new row(dataRow));
-		}   
-	}
+        var json_list = JSON.parse(import_list);
+        if (json_list && (json_list instanceof Array || json_list instanceof Object)) {
+            var len = json_list.length;
+            this.list.length=0;
+            var dataRow = null;
+            for (var nIndex = 0; nIndex < len; nIndex ++) {
+                dataRow = json_list[nIndex];
+                this.addRow(new row(dataRow));
+            }
+        }
     };
     /** Creates the option list for the add-column-to-row select control
     *   Sets the option value to row.id and option text to row.location.
@@ -263,16 +263,16 @@ var row_column = function(options) {
     };
     this.getCssClass=function() {
         return this.css_class;
-    }
+    };
     this.setCssClass=function(css_class) {
         this.css_class = css_class;
-    }
+    };
     this.init(options);
 };
 /** Grid represents the resume document.
  *  Similar to a "worksheet". Puts the row,columns and cells together
  *  to form the resume document.
- *  @property list: collection of row_column entitys (cells)
+ *  @property list: collection of row_column entities (cells)
  *  @property rowList: instance or row_list
  *  @property columnList: instance of column_list
  *  @property useBorders: boolean determines outline view on or off
@@ -304,7 +304,6 @@ var grid = function(options) {
 
         if (options && options.hasOwnProperty("useLinks")) {
             this.useLinks = options.useLinks;
-            inks;
         } else {
             this.useLinks = true; // default
         }
@@ -537,6 +536,69 @@ var grid = function(options) {
         });
      };
 
+    /** Resets row locations.
+    *   Logically, the row identified by origin_row_id is inserted after the row
+    *   identified by destination_row_id. We determine the direction of the change.
+    *   If we are moving a row up, any rows which currently are above (have a row position
+    *   who's location value is greater than the origin row's location value), have their locations
+    *   reduced. In other words, those rows are pushed down.
+    *
+    *   If the move direction is down. Then any rows below (rows who's location values are less than the location
+    *   value of the origin row are incremented) are pushed up.
+    *
+    *   If the user selects the same row for both origin and destination, this method performs no action. Simply returns.
+    * */
+    this.changeRowPosition=function(origin_row_id, destination_row_id){
+        var origin_row = this.rowList.getRow(origin_row_id);
+        var destination_row = this.rowList.getRow(destination_row_id);
+        var o_location = origin_row.getLocation();
+        var d_location = destination_row.getLocation();
+        if ( o_location == d_location) {
+            return;
+        }
+
+        var direction = (o_location > d_location) ? 'down' : 'up';
+        var elem = null;
+        var len = this.rowList.list.length;
+        var elem_loc = null;
+        switch(direction) {
+            case 'down':
+                for (var nIndex=0; nIndex < len; nIndex++){
+                    elem = this.rowList.list[nIndex];
+                    elem_loc = elem.getLocation();
+                    if (elem_loc > d_location && elem_loc < o_location) {
+                        elem_loc +=1;
+                        elem.setLocation(elem_loc);
+                    }
+                    if (elem_loc == o_location) {
+                        // if we found the destination element
+                        destination_row.setLocation((d_location +1));
+                        origin_row.setLocation(d_location);
+                        this.sortByRowLocation();
+                        break;
+                    }
+                }
+            break;
+            case 'up':
+                for (var nIndex=0; nIndex < len; nIndex++){
+                    elem = this.rowList.list[nIndex];
+                    elem_loc = elem.getLocation();
+                    if (elem_loc > o_location && elem_loc < d_location) {
+                        elem_loc -=1;
+                        elem.setLocation(elem_loc);
+                    }
+                    if (elem_loc == d_location) {
+                        // if we found the destination element
+                        destination_row.setLocation((d_location -1));
+                        origin_row.setLocation(d_location);
+                        this.sortByRowLocation();
+                        break;
+                    }
+                }
+            break;
+        }
+    };
+
     /** Creates a document cell. The render_links_arg parameter determines whether
      *  we add a parent link around the cell. A parent link allows the user to click
      *  on the cell to invoke the edit cell dialog.
@@ -546,7 +608,7 @@ var grid = function(options) {
      *  icon. The "edit icon" allows the user to select cells which have either no content or
      *  a non-displayable content such as &nbsp;.
      *
-     *  Npte! This method logically renders the user's resume document. Thus, this method is
+     *  Note! This method logically renders the user's resume document. Thus, this method is
      *  used by the "export to HTML" function.
      *
      *  @param render_links_arg sets whether "edit links" are rendered around each document cell. Note!
@@ -587,7 +649,6 @@ var grid = function(options) {
                 tr.setAttribute("class","row-fluid");
             }
             td = document.createElement("div");
-            td.setAttribute("cell","true");
             td.setAttribute("class",row_column.getCssClass());
             if (render_links) {
                 link = document.createElement("a");
@@ -619,6 +680,7 @@ var grid = function(options) {
             localStorage.setItem("rows",JSON.stringify(this.rowList.list));
             localStorage.setItem("columns",JSON.stringify(this.columnList.list));
             localStorage.setItem("row_columns",JSON.stringify(this.list));
+            localStorage.setItem("title",this.title);
         } catch(error) {
             console.log("store() error : " + error);
         }
@@ -639,6 +701,7 @@ var grid = function(options) {
             this.rowList.importList(localStorage.getItem("rows"));
             this.columnList.importList(localStorage.getItem("columns"));
             this.importLocalList(localStorage.getItem("row_columns"));
+            this.setTitle(localStorage.getItem("title"));
             if (target_el) {
                 target_el.appendChild(this.render());
             }
@@ -675,7 +738,8 @@ var grid = function(options) {
         var data = {
             "rows":JSON.stringify(this.rowList.list),
             "columns":JSON.stringify(this.columnList.list),
-            "row_columns":JSON.stringify(this.list)
+            "row_columns":JSON.stringify(this.list),
+            "title":this.title
         };
         return data;
     };

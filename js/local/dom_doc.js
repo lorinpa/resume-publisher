@@ -184,41 +184,50 @@ var hideInfoMessage = function() {
 */
 var AppRouter  =  function() {
 
-	/** Responds to click on menu item : Document->Load (from localStorage). */
-	document.querySelector("#load-doc-link").addEventListener("click", function(event) {
-		event.preventDefault();
-		var table = document.querySelector("#report");
-		g.load(table);
-		showSuccessMessage("Document Loaded from Web Browser local database.");
-	});
-	/** Responds to click on menu item : Document->Store/Save  (to localStorage). */
-	document.querySelector("#store-doc-link").addEventListener("click", function(event) {
-		event.preventDefault();
-		closeDialogControls();
-		g.store();
-		showSuccessMessage("Document Saved to Web Browser local database..");
-	});
+    /** Responds to click on menu item : Document->Set Title. */
+    document.querySelector("#edit-title-link").addEventListener("click", function(event) {
+        event.preventDefault();
+        closeDialogControls();
+        var dlg = document.querySelector("#edit-title-dlg");
+        var style = dlg.style;
+        style.display = "block";
+    });
 
-	/** Responds to click on menu item : Document->Save Data Export */
-	document.querySelector("#save-json-link").addEventListener("click", function(event) {
-		event.preventDefault();
-		closeDialogControls();
-		var link = g.toBlob();
-		var dlg = document.querySelector("#export-json-dlg");
-		dlg.style.setProperty("display", "block");
-		var link_container = dlg.querySelector("#save-json");
-		link_container.innerHTML = link.outerHTML;
-	});
+    /** Responds to click on menu item : Document->Load (from localStorage). */
+    document.querySelector("#load-doc-link").addEventListener("click", function(event) {
+        event.preventDefault();
+        var table = document.querySelector("#report");
+        g.load(table);
+        showSuccessMessage("Document Loaded from Web Browser local database.");
+    });
+    /** Responds to click on menu item : Document->Store/Save  (to localStorage). */
+    document.querySelector("#store-doc-link").addEventListener("click", function(event) {
+        event.preventDefault();
+        closeDialogControls();
+        g.store();
+        showSuccessMessage("Document Saved to Web Browser local database..");
+    });
 
-	/** Responds to click on menu item : Document->Import File Data */
-	document.querySelector("#import-json-link").addEventListener("click", function(event) {
-		event.preventDefault();
-		closeDialogControls();
-		var dlg = document.querySelector("#import-json-dlg");
-		dlg.style.setProperty("display", "block");
-	});
-        
-	/** Responds to click on menu item : Rows->Add Row */
+    /** Responds to click on menu item : Document->Save Data Export */
+    document.querySelector("#save-json-link").addEventListener("click", function(event) {
+        event.preventDefault();
+        closeDialogControls();
+        var link = g.toBlob();
+        var dlg = document.querySelector("#export-json-dlg");
+        dlg.style.setProperty("display", "block");
+        var link_container = dlg.querySelector("#save-json");
+        link_container.innerHTML = link.outerHTML;
+    });
+
+    /** Responds to click on menu item : Document->Import File Data */
+    document.querySelector("#import-json-link").addEventListener("click", function(event) {
+        event.preventDefault();
+        closeDialogControls();
+        var dlg = document.querySelector("#import-json-dlg");
+        dlg.style.setProperty("display", "block");
+    });
+
+    /** Responds to click on menu item : Rows->Add Row */
         document.querySelector("#add-row-link").addEventListener("click", function(event) {
             event.preventDefault();
             closeDialogControls();
@@ -238,6 +247,16 @@ var AppRouter  =  function() {
             style.display = "block";
         });
 
+        /** Responds to click on menu item : Rows->Move Row Position */
+        document.querySelector("#move-row-link").addEventListener("click", function(event) {
+            event.preventDefault();
+            closeDialogControls();
+            reloadSelectControl("#change-row-position");
+            reloadSelectControl("#new-row-position");
+            var dlg = document.querySelector("#row-move-dlg");
+            var style = dlg.style;
+            style.display = "block";
+        });
 
         /** Responds to click on menu item : Columns->Add Column (to specific row) */
         document.querySelector("#add-column-link").addEventListener("click", function(event) {
@@ -263,6 +282,37 @@ var AppRouter  =  function() {
             document.querySelector("#report").innerHTML = g.render().outerHTML;
             reloadSelectControl("#delete-row");
             showSuccessMessage("Row Deleted.");
+        });
+
+         /** Responds to click on menu item : Document->Export. */
+        document.querySelector("#export-doc-link").addEventListener("click", function(event) {
+            event.preventDefault();
+            closeDialogControls();
+            var dlg = document.querySelector("#export-doc-dlg");
+            var style = dlg.style;
+            style.display = "block";
+        });
+
+        /** Responds to click on menu item : Document->Toggle Link Display. */
+        document.querySelector("#toggle-doc-links-link").addEventListener("click", function(event) {
+            event.preventDefault();
+            var linkState = g.getUseLinks();
+            var newState = linkState ? false : true;
+            g.setUseLinks(newState);
+            var table = g.render(newState);
+            var report = document.querySelector("#report");
+            report.innerHTML = table.outerHTML;
+            showSuccessMessage("Document Link Display: " + newState + " .");
+        });
+
+        /** Responds to click on menu item : Document->Toggle Borders */
+        document.querySelector("#toggle-doc-border-link").addEventListener("click", function(event) {
+            event.preventDefault();
+            g.toggleBorders();
+            var newState = g.getUseLinks();
+            var table = g.render(newState);
+            var report = document.querySelector("#report");
+            report.innerHTML = table.outerHTML;
         });
 
         /** General event handler for all of the application's dialogs.
@@ -354,6 +404,27 @@ var AppRouter  =  function() {
                         break;
                 }
             };
+
+            /** Services dialogs that are rendered in the header. Listens for a click on the close-icon.
+             *  Allows the user to cancel dialogs located in the header.
+             */
+            this.dlgListener = function(event) {
+                var tagName = event.target.tagName;
+                switch (tagName) {
+                    case 'I':
+                        //console.log("got icon click");
+                        closeDialogControls();
+                    break;
+                    case 'BUTTON':
+                        if (event.target.id && event.target.id ==='edit-title-button') {
+                            var title = document.querySelector("#edit-title-tf").value;
+                            document.querySelector("title").innerText = title;
+                            g.setTitle(title);
+                            showSuccessMessage("Document title set to "+ title);
+                        }
+                    break;
+                }
+            }
 
             /** Services the edit-cell dialog (when the dialog is displayed to the user).
              *  The edit-cell dialog allows the user to change content, set css classes on the containing <div> element.
@@ -464,12 +535,24 @@ var AppRouter  =  function() {
                 }
             };
 
+             /** Services the Change Row Position Dialog */
+            this.changeRowPositionListener = function(event) {
+                var origin_row_id = document.querySelector("#change-row-position").value;
+                var destination_row_id = document.querySelector("#new-row-position").value;
+                g.changeRowPosition(origin_row_id, destination_row_id);
+                var report = document.getElementById("report");
+                var table = g.render();
+                report.innerHTML = table.outerHTML;
+                showSuccessMessage("Row Position Changed.");
+            };
+
             /** Selects the appropriate dom elements and adds event listeners to them.
              *
              */
             this.init = function() {
-		document.querySelector("input#import-json").addEventListener("change", this.importFileListener, false);
-		document.querySelector("#report").addEventListener("click", this.clickListener, true);
+                document.querySelector("input#import-json").addEventListener("change", this.importFileListener, false);
+                document.querySelector("#change-row-position-button").addEventListener("click", this.changeRowPositionListener, false);
+                document.querySelector("#report").addEventListener("click", this.clickListener, true);
                 document.querySelector("#edit-column-dlg").addEventListener("click", this.editCellListener, true);
                 document.querySelector("#add-column-to-row-button").addEventListener("click", this.addColumnListener, true);
                 document.querySelector("#dlg-controls").addEventListener("click", this.dlgListener, true);
