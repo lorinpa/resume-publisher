@@ -697,11 +697,14 @@ var grid = function(options) {
             this.rowList.length =0;
             this.columnList.length=0;
             this.list.length =0;
+            var title;
 
             this.rowList.importList(localStorage.getItem("rows"));
             this.columnList.importList(localStorage.getItem("columns"));
             this.importLocalList(localStorage.getItem("row_columns"));
-            this.setTitle(localStorage.getItem("title"));
+            title = localStorage.getItem("title");
+            this.setTitle(title);
+            document.title = title;
             if (target_el) {
                 target_el.appendChild(this.render());
             }

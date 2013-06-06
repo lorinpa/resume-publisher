@@ -29,9 +29,8 @@ var downloadFile = function() {
     var doc = document.createElement("html");
     var body = document.createElement('body');
     var head = document.createElement("head");
-    var title = document.createElement("title");
-    title.innerText = g.getTitle();
-    head.innerHTML = title.outerHTML;
+    var title = document.querySelector("title").cloneNode(true);
+    head.appendChild(title);
     head.innerHTML += charset;
     head.innerHTML += viewPort;
     // clone the style or we loose of formatting in our application

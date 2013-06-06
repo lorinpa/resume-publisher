@@ -418,13 +418,13 @@ var AppRouter  =  function() {
                     case 'BUTTON':
                         if (event.target.id && event.target.id ==='edit-title-button') {
                             var title = document.querySelector("#edit-title-tf").value;
-                            document.querySelector("title").innerText = title;
+                            document.title = title;
                             g.setTitle(title);
                             showSuccessMessage("Document title set to "+ title);
                         }
                     break;
                 }
-            }
+            };
 
             /** Services the edit-cell dialog (when the dialog is displayed to the user).
              *  The edit-cell dialog allows the user to change content, set css classes on the containing <div> element.
@@ -526,6 +526,11 @@ var AppRouter  =  function() {
                                             // let's close the dialog and display a status
                                             closeDialogControls();
                                             showSuccessMessage("File Data Imported.")
+                                        break;
+                                        case 'title':
+                                            var title = data['title'];
+                                            g.setTitle(title);
+                                            document.title = title;
                                         break;
                                     }
                                 }
