@@ -9,3 +9,6 @@ Written by Lorin M Klugman
 Latest version is Release 1.0 located [here] (https://github.com/lorinpa/resume-publisher/tree/rel-1.0)
 
 Please see our [Wiki](https://github.com/lorinpa/resume-publisher/wiki) for instructions on how to install and use.
+
+View our screencast [How to create a mobile version of your resume.](https://www.youtube.com/watch?v=ZDJAIqrpgRs)
+
